@@ -78,13 +78,16 @@ def Reward(s):
     elif s % 3 == 0:
         return -1 
 
-def QLearning():
+def QLearning(alpha, gamma):
     qTable = ReadQTable()
     s = 0
     for i in range(9):
-        a = qTable[0].index(max(qTable[0]))
+        a = qTable[s].index(max(qTable[s]))
         a_prime = int(input("selecione su carta: "))
         s_prime = TransitionModel(s, a, a_prime)
         r = Reward(s_prime)
+        qTable[s][a] += alpha(r + gamma*(max(qTable[s_prime])) - qTable[s][a])
+        s = s_prime
+    SaveQtable(qTable)
 CreateQtable()
 
