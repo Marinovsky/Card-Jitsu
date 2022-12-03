@@ -1,4 +1,4 @@
-# Maze_Solver_IIA
+# Card-Jitsu
 
 Reinforcement learning proyect for the "Introduction to Artificial Intelligence" class at the "Universidad Nacional de Colombia". 
 
