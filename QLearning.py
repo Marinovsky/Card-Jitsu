@@ -20,11 +20,10 @@
 import json
 import random
 
-# Card-Jitsu cards, actions the AI agent and the player can take
-cards = ["F1", "A1", "N1", "F2", "A2", "N2", "F3", "A3", "N3"]
 
-# Discounting factor for the AI agent
-gamma = 0.4
+# Card-Jitsu cards, actions the AI agent and the player can take
+#         0     1     2     3     4     5     6     7     8
+cards = ["F1", "A1", "N1", "F2", "A2", "N2", "F3", "A3", "N3"]
 
 # Seed to make the experiments reproducible
 random.seed(0)
@@ -47,7 +46,6 @@ def SaveQtable(qTable):
     -----------
     This function updates the file "QTable.json" with the given
     dictionary
-
     Parameters
     ----------
     qTable : Dictionary of string-(float list)
@@ -63,7 +61,6 @@ def ComputeNewState(s, winner, card):
     Given the last state, the winner of the current round, and
     the card with which the winner won the round it computer the
     next state
-
     Parameters
     ----------
     s : string
@@ -73,7 +70,6 @@ def ComputeNewState(s, winner, card):
     card : string
         "A" if the winner won with a water card. "F" if the winner
         won with a fire card. "N" if the winner won with a snow card.
-
     Returns
     -------
     string : The next state of the game based in the last state, the
@@ -99,7 +95,6 @@ def TransitionModel(s, a, a_prime):
     Process (MDP) or the game (Card-Jitsu) logic. Based in the last state,
     the action took by the AI agent and the action took by the player it
     determined the next state.
-
     Parameters
     ----------
     s : string
@@ -108,7 +103,6 @@ def TransitionModel(s, a, a_prime):
         Index of the card took by the AI agent, see cards dictionary
     a_prime : int
         Index of the card took by the player, see cards dictionary
-
     Returns
     -------
     string : New state of the MDP or game
@@ -162,7 +156,6 @@ def Reward(s):
     Description
     -----------
     Computes the reward for the AI agent based on the last round.
-
     Parameters
     ----------
     s : string
@@ -180,12 +173,11 @@ def Reward(s):
     elif s == "player":
         return -1
 
-def PrintGameStatus(s_prime):
+def PrintGameStatus(s_prime, show_game):
     """
     Description
     -----------
     Prints the game status the inform the player.
-
     Parameters
     ----------
     s_prime : string
@@ -193,10 +185,10 @@ def PrintGameStatus(s_prime):
     """
     player = s_prime.split("$")[1]
     ai = s_prime.split("$")[0]
-    print("=== MATCH ===")
-    print("Player: " + player)
-    print("AI: " + ai)
-    print("=============")
+    if show_game: print("=== MATCH ===")
+    if show_game: print("Player: " + player)
+    if show_game: print("AI: " + ai)
+    if show_game: print("=============")
 
 def CheckIfWinner(s):
     """
@@ -204,7 +196,6 @@ def CheckIfWinner(s):
     -----------
     Function to check whether the AI agent or the player has alredy
     won the game.
-
     Parameters
     ----------
     s : string
@@ -238,7 +229,6 @@ def SelectAction(list):
     -----------
     Function to select the next action of the AI agent using
     the epsilon-greedy method, with epsilon = 0.01.
-
     Parameters
     ----------
     list : list
@@ -248,7 +238,6 @@ def SelectAction(list):
     Returns
     -------
     int : The action the AI agent took based on the epsilon-greedy method.
-
     """
     n = random.randint(1, 100)
     if n != 1:
@@ -257,7 +246,7 @@ def SelectAction(list):
         k = random.randint(0,8)
         return k
 
-def Game(gamma):
+def Game(gamma, is_random = False, train = False, show_game = True):
     """
     Description
     -----------
@@ -266,7 +255,6 @@ def Game(gamma):
     seen as the Markov Decision Process (MDP) of the Card-Jitsu
     game. This functions allows the user to play with the AI, teaching
     the AI agent how to play in the process.
-
     Parameters
     ----------
     gamma : float
@@ -277,22 +265,35 @@ def Game(gamma):
     alpha = 1
     k = 1
     match = []
+    winrecord = []
     while (CheckIfWinner(s) == -1):
-        print("Round " + str(k))
+        if show_game: print("Round " + str(k))
         alpha = 1/k
         a = SelectAction(qTable[s])
-        a_prime = int(input("selecione su carta: "))
-        print("AI card: " + cards[a])
-        print("Your card: " + cards[a_prime])
+        if is_random:
+            a_prime = random.randint(0,8)
+        else:
+            a_prime = int(input("selecione su carta: "))
+        if show_game: print("AI card: " + cards[a])
+        if show_game: print("Your card: " + cards[a_prime])
         match.append([a, a_prime])
         s_prime, winner = TransitionModel(s, a, a_prime)
         r = Reward(winner)
         if r == 1:
-            print("AI wins this round")
+            if show_game:  print("AI wins this round")
+            winner = 'AI'
         elif r == 0:
-            print("Draw")
+            if show_game: print("Draw")
+            winner = 'Draw'
         else:
-            print("Player wins")
+            if show_game: print("Player wins")
+            winner = 'Player'
+        
+        winrecord.append({
+            'AI': cards[a],
+            'Player': cards[a_prime],
+            'Winner': winner,
+        })
         
         if s_prime not in qTable:
             qTable[s_prime] = [0]*9
@@ -300,18 +301,18 @@ def Game(gamma):
         qTable[s][a] += alpha*(r + gamma*(max(qTable[s_prime])) - qTable[s][a])
         #print("qTable["+str(s)+"]["+str(a)+"]: " + str(qTable[s][a]))
         #print("New state: " + str(s_prime))
-        PrintGameStatus(s_prime)
+        PrintGameStatus(s_prime, show_game)
         s = s_prime
         k += 1
 
     if CheckIfWinner(s) == "ai":
-        print("AI wins!")
+        if show_game: print("AI wins!")
+        Gwinner = 'AI'
     else:
-        print("Player wins!")
+        if show_game: print("Player wins!")
+        Gwinner = 'Player'
     
-    SaveQtable(qTable)
-    print(match)
-
-# Start to play
-Game(gamma)
-
+    if train: SaveQtable(qTable)
+    if show_game: print(match, '\n=============\n')
+    
+    return winrecord, Gwinner
