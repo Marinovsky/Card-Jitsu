@@ -2,7 +2,7 @@
 
 Reinforcement learning proyect for the "Introduction to Artificial Intelligence" class at the "Universidad Nacional de Colombia". 
 
-Project video: [here](https://None)
+Project video: [here]([https://None](https://youtu.be/a34hzBblUDs))
 
 # Requirements
   - Python 3.x with:
